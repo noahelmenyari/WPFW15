@@ -1,0 +1,111 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div id="index">
+
+    <table class="table-bordered table d-table"id="students">
+        <thead>
+            <tr class="d-table-row">
+                <th>Id</th>
+                <th>Naam</th>
+                <th>Leeftijd</th>
+                <th> </th>
+                <th> </th>
+                <th> </th>
+                <th> </th>
+                <th> </th>
+                <th> </th>
+            </tr>
+        </thead>
+        <tbody id="studentenlijst">
+
+        </tbody>
+    </table>
+</div>
+<div id="nieuwestudent">
+        <input type="text" name="naam" id="naam" />
+        <input type="number" name="leeftijd" id="leeftijd" />
+        <button type="submit" class="btn btn-outline-dark" id="postButton" value="VoegToe">Voeg student toe</button>
+</div>
+
+
+@section Scripts{
+
+<script>
+
+    function getStudenten() {
+        fetch('/api/Students/')
+            .then((response) => response.json())
+            .then((studenten) => {
+                console.log(studenten);
+                document.getElementById("studentenlijst").innerHTML = "";
+                for (let s of studenten) {
+                    document.getElementById("studentenlijst").innerHTML += "<tr class='d-table-row'> <td> " + s.id + "</td><td>" + s.naam + "</td><td>" + s.leeftijd + "</td><td><button class='btn btn-danger deleteButton' type='submit' id='" + s.id + "' value='Verwijder'>Verwijder</button></td>" +
+                        "'<td><label class='text-sm-left'>Naam: </label></td><td><input class='text-secondary' type='text' name='naam' id='naam" + s.id + "' value='" + s.naam + "'/></td><td><label class='text-sm-left'>Leeftijd: </label></td><td><input class='text-secondary' type='number' name='leeftijd' id='leeftijd" + s.id + "' value='" + s.leeftijd + "'/></td><td>" +
+                                "<button type='submit' class='btn btn-outline-dark editButton' id='" + s.id + "' value='Aanpassen'>Opslaan</button></td></tr>";
+                }
+                for (let s of studenten) {
+                    document.getElementsByClassName("deleteButton").namedItem(s.id).onclick = deleteStudent;
+                    document.getElementsByClassName("editButton").namedItem(s.id).onclick = editStudent;
+                }
+            })
+    }
+    getStudenten();
+    document.getElementById("postButton").onclick = addStudent;
+
+    function addStudent() {
+        console.log("add student clicked");
+        var detailsobj = {
+            Naam: document.getElementById('naam').value,
+            Leeftijd: parseInt(document.getElementById('leeftijd').value)
+        }
+        document.getElementById('naam').value = "";
+        document.getElementById('leeftijd').value = "";
+        console.log(detailsobj);
+        var student = JSON.stringify(detailsobj);
+        fetch('/api/Students/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: student
+        })
+            .then(r => getStudenten())
+            .then(r => alert("Student toegevoegd: "+ JSON.stringify(detailsobj)))
+    }
+
+    function deleteStudent() {
+
+        console.log("delete student " + this.id + " clicked");
+        fetch('api/Students/' + this.id, {
+            method: 'DELETE'
+        })
+            .then(r => getStudenten())
+            .then(r => alert("Student " + this.id + " verwijderd."))
+    }
+
+    function editStudent() {
+        console.log("edit student " + this.id + " clicked");
+        var detailsobj = {
+            Id: parseInt(this.id),
+            Naam: document.getElementById("naam" + this.id).value,
+            Leeftijd: parseInt(document.getElementById("leeftijd" + this.id).value)
+        }
+        var student = JSON.stringify(detailsobj);
+        document.getElementById("naam" + this.id).value = "";
+        document.getElementById("leeftijd" + this.id).value = "";
+        fetch('api/Students/' + this.id, {
+            method: 'PUT',
+            headers: {
+                'Content-Type' : 'application/json'
+            },
+            body: student
+        })
+            .then(r => getStudenten())
+            .then(r => alert("Student bewerkt: " + this.id + " " + student))
+    }
+
+</script>
+
+}
